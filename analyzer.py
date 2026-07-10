@@ -13,16 +13,17 @@ with open(log_file_path, "r") as log_file:
 
         if "INFO" in line:
             info_count += 1
-
         elif "WARNING" in line:
             warning_count += 1
-
         elif "ERROR" in line:
             error_count += 1
 
         print(line.strip())
 
-print("\n")
+        if "Failed login" in line:
+            print("ALERT: Failed Login Detected")
+
+print()
 print("=" * 50)
 print("SOC REPORT")
 print("=" * 50)
@@ -30,5 +31,3 @@ print("=" * 50)
 print(f"INFO: {info_count}")
 print(f"WARNING: {warning_count}")
 print(f"ERROR: {error_count}")
-
-git status
