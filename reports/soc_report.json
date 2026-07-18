@@ -1,0 +1,16 @@
+{
+    "INFO": 2,
+    "WARNING": 2,
+    "ERROR": 1,
+    "FAILED_LOGINS": 2,
+    "DETECTED_USERS": [
+        "Ali",
+        "admin",
+        "Sara",
+        "root"
+    ],
+    "DETECTED_IPS": [
+        "192.168.1.50"
+    ],
+    "THREAT_STATUS": "No Brute Force Attack"
+}

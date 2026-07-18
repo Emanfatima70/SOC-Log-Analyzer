@@ -1,0 +1,8 @@
+Category,Value
+INFO,2
+WARNING,2
+ERROR,1
+FAILED LOGINS,2
+DETECTED USERS,"Ali, admin, Sara, root"
+DETECTED IPS,192.168.1.50
+THREAT STATUS,No Brute Force Attack

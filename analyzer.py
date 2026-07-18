@@ -1,4 +1,6 @@
 import re
+import csv
+import json
 
 print("=" * 50)
 print("SOC LOG ANALYZER")
@@ -30,8 +32,13 @@ with open(log_file_path, "r") as log_file:
 
         # Failed Login Detection
         if "Failed login" in line:
-            failed_login_count += 1
-            print("ALERT: Failed Login Detected")
+    failed_login_count += 1
+    print("ALERT: Failed Login Detected")
+
+    time_match = re.search(r"\d{2}:\d{2}:\d{2}", line)
+
+    if time_match:
+        failed_login_times.append(time_match.group())
 
         # Brute Force Detection
         if failed_login_count >= 3:
@@ -153,3 +160,55 @@ with open(report_path, "w") as report_file:
         report_file.write("No Brute Force Attack\n")
 
 print(f"Report saved successfully: {report_path}")
+print()
+print("=" * 50)
+print("SAVING CSV REPORT...")
+print("=" * 50)
+
+csv_report_path = "reports/soc_report.csv"
+
+with open(csv_report_path, "w", newline="") as csv_file:
+
+    writer = csv.writer(csv_file)
+
+    writer.writerow(["Category", "Value"])
+
+    writer.writerow(["INFO", info_count])
+    writer.writerow(["WARNING", warning_count])
+    writer.writerow(["ERROR", error_count])
+    writer.writerow(["FAILED LOGINS", failed_login_count])
+
+    writer.writerow(["DETECTED USERS", ", ".join(detected_users)])
+    writer.writerow(["DETECTED IPS", ", ".join(detected_ips)])
+
+    if brute_force:
+        writer.writerow(["THREAT STATUS", "BRUTE FORCE ATTACK DETECTED"])
+    else:
+        writer.writerow(["THREAT STATUS", "No Brute Force Attack"])
+
+print(f"CSV Report saved successfully: {csv_report_path}")
+print()
+print("=" * 50)
+print("SAVING JSON REPORT...")
+print("=" * 50)
+
+json_report_path = "reports/soc_report.json"
+
+report_data = {
+    "INFO": info_count,
+    "WARNING": warning_count,
+    "ERROR": error_count,
+    "FAILED_LOGINS": failed_login_count,
+    "DETECTED_USERS": detected_users,
+    "DETECTED_IPS": detected_ips,
+    "THREAT_STATUS": (
+        "BRUTE FORCE ATTACK DETECTED"
+        if brute_force
+        else "No Brute Force Attack"
+    )
+}
+
+with open(json_report_path, "w") as json_file:
+    json.dump(report_data, json_file, indent=4)
+
+print(f"JSON Report saved successfully: {json_report_path}")
