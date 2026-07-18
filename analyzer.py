@@ -1,6 +1,7 @@
 import re
 import csv
 import json
+from datetime import datetime
 
 print("=" * 50)
 print("SOC LOG ANALYZER")
@@ -16,11 +17,15 @@ brute_force = False
 
 detected_ips = []
 detected_users = []
+failed_login_times = []
+
+time_based_brute_force = False
+risk_score = 0
 
 with open(log_file_path, "r") as log_file:
     for line in log_file:
 
-        # Log level counting
+        # Log Level Counting
         if "INFO" in line:
             info_count += 1
         elif "WARNING" in line:
@@ -32,15 +37,19 @@ with open(log_file_path, "r") as log_file:
 
         # Failed Login Detection
         if "Failed login" in line:
-    failed_login_count += 1
-    print("ALERT: Failed Login Detected")
+            failed_login_count += 1
+            print("ALERT: Failed Login Detected")
 
-    time_match = re.search(r"\d{2}:\d{2}:\d{2}", line)
+            time_match = re.search(r"\d{2}:\d{2}:\d{2}", line)
 
-    if time_match:
-        failed_login_times.append(time_match.group())
+            if time_match:
+                login_time = datetime.strptime(
+                    time_match.group(),
+                    "%H:%M:%S"
+                )
+                failed_login_times.append(login_time)
 
-        # Brute Force Detection
+        # Brute Force Threshold
         if failed_login_count >= 3:
             brute_force = True
 
@@ -74,32 +83,81 @@ with open(log_file_path, "r") as log_file:
             if username not in detected_users:
                 detected_users.append(username)
                 print(f"USER DETECTED: {username}")
+                print()
+        # Time-Based Brute Force Detection
+if len(failed_login_times) >= 3:
 
-print()
+    first_time = failed_login_times[0]
+    third_time = failed_login_times[2]
+
+    time_difference = (third_time - first_time).total_seconds()
+
+    if time_difference <= 60:
+        time_based_brute_force = True
 print("=" * 50)
 print("SOC REPORT")
 print("=" * 50)
+print()
+
+print("=" * 50)
+print("TIME-BASED DETECTION")
+print("=" * 50)
+
+if time_based_brute_force:
+    print("TIME-BASED BRUTE FORCE DETECTED")
+else:
+    print("No Time-Based Brute Force Attack")
 
 print(f"INFO: {info_count}")
 print(f"WARNING: {warning_count}")
 print(f"ERROR: {error_count}")
 print(f"FAILED LOGINS: {failed_login_count}")
 
+
 print()
-print("DETECTED USERS:")
-if detected_users:
-    for user in detected_users:
-        print(f"- {user}")
+
+print("FAILED LOGIN TIMES:")
+if failed_login_times:
+    for login_time in failed_login_times:
+        print(f"- {login_time.strftime('%H:%M:%S')}")
 else:
     print("None")
 
 print()
+
+print("DETECTED USERS:")
+if detected_users:
+    for username in detected_users:
+        print(f"- {username}")
+else:
+    print("None")
+
+print()
+
 print("DETECTED IP ADDRESSES:")
 if detected_ips:
     for ip_address in detected_ips:
         print(f"- {ip_address}")
 else:
     print("None")
+    print("FAILED LOGIN COUNT:", failed_login_count)
+print("ERROR COUNT:", error_count)
+print("BRUTE FORCE:", brute_force)
+# Risk Score Calculation
+
+risk_score = (
+    failed_login_count * 10
+    + error_count * 20
+)
+
+if brute_force:
+    risk_score += 40
+
+if time_based_brute_force:
+    risk_score += 50
+
+
+print(f"RISK SCORE: {risk_score}")
 
 print()
 print("=" * 50)
@@ -124,7 +182,7 @@ else:
     print("No Brute Force Attack")
     print()
 print("=" * 50)
-print("SAVING REPORT...")
+print("SAVING TXT REPORT...")
 print("=" * 50)
 
 report_path = "reports/soc_report.txt"
@@ -137,9 +195,17 @@ with open(report_path, "w") as report_file:
     report_file.write(f"INFO: {info_count}\n")
     report_file.write(f"WARNING: {warning_count}\n")
     report_file.write(f"ERROR: {error_count}\n")
-    report_file.write(f"FAILED LOGINS: {failed_login_count}\n\n")
+    report_file.write(f"FAILED LOGINS: {failed_login_count}\n")
+    report_file.write(f"RISK SCORE: {risk_score}\n\n")
 
-    report_file.write("DETECTED USERS:\n")
+    report_file.write("FAILED LOGIN TIMES:\n")
+    if failed_login_times:
+        for login_time in failed_login_times:
+            report_file.write(f"- {login_time.strftime('%H:%M:%S')}\n")
+    else:
+        report_file.write("None\n")
+
+    report_file.write("\nDETECTED USERS:\n")
     if detected_users:
         for user in detected_users:
             report_file.write(f"- {user}\n")
@@ -159,7 +225,14 @@ with open(report_path, "w") as report_file:
     else:
         report_file.write("No Brute Force Attack\n")
 
-print(f"Report saved successfully: {report_path}")
+    report_file.write("\nTIME-BASED DETECTION:\n")
+    if time_based_brute_force:
+        report_file.write("TIME-BASED BRUTE FORCE DETECTED\n")
+    else:
+        report_file.write("No Time-Based Brute Force Attack\n")
+
+print(f"TXT Report saved successfully: {report_path}")
+
 print()
 print("=" * 50)
 print("SAVING CSV REPORT...")
@@ -172,11 +245,18 @@ with open(csv_report_path, "w", newline="") as csv_file:
     writer = csv.writer(csv_file)
 
     writer.writerow(["Category", "Value"])
-
     writer.writerow(["INFO", info_count])
     writer.writerow(["WARNING", warning_count])
     writer.writerow(["ERROR", error_count])
     writer.writerow(["FAILED LOGINS", failed_login_count])
+    writer.writerow(["RISK SCORE", risk_score])
+
+    writer.writerow([
+        "FAILED LOGIN TIMES",
+        ", ".join(
+            [t.strftime("%H:%M:%S") for t in failed_login_times]
+        )
+    ])
 
     writer.writerow(["DETECTED USERS", ", ".join(detected_users)])
     writer.writerow(["DETECTED IPS", ", ".join(detected_ips)])
@@ -185,8 +265,10 @@ with open(csv_report_path, "w", newline="") as csv_file:
         writer.writerow(["THREAT STATUS", "BRUTE FORCE ATTACK DETECTED"])
     else:
         writer.writerow(["THREAT STATUS", "No Brute Force Attack"])
+        writer.writerow(["TIME BASED BRUTE FORCE", time_based_brute_force])
 
 print(f"CSV Report saved successfully: {csv_report_path}")
+
 print()
 print("=" * 50)
 print("SAVING JSON REPORT...")
@@ -199,6 +281,11 @@ report_data = {
     "WARNING": warning_count,
     "ERROR": error_count,
     "FAILED_LOGINS": failed_login_count,
+    "RISK_SCORE": risk_score,
+    "TIME_BASED_BRUTE_FORCE": time_based_brute_force,
+    "FAILED_LOGIN_TIMES": [
+        t.strftime("%H:%M:%S") for t in failed_login_times
+    ],
     "DETECTED_USERS": detected_users,
     "DETECTED_IPS": detected_ips,
     "THREAT_STATUS": (

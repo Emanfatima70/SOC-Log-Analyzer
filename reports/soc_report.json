@@ -3,6 +3,12 @@
     "WARNING": 2,
     "ERROR": 1,
     "FAILED_LOGINS": 2,
+    "RISK_SCORE": 40,
+    "TIME_BASED_BRUTE_FORCE": false,
+    "FAILED_LOGIN_TIMES": [
+        "09:12:15",
+        "09:18:01"
+    ],
     "DETECTED_USERS": [
         "Ali",
         "admin",
