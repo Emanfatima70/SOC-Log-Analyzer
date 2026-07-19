@@ -1,13 +1,18 @@
+import os
 import re
 import csv
 import json
+import sys
 from datetime import datetime
 
 print("=" * 50)
 print("SOC LOG ANALYZER")
 print("=" * 50)
 
-log_file_path = "sample_logs/sample.log"
+if len(sys.argv) > 1:
+    log_file_path = sys.argv[1]
+else:
+    log_file_path = "sample_logs/sample.log"
 
 info_count = 0
 warning_count = 0
@@ -21,7 +26,15 @@ failed_login_times = []
 
 time_based_brute_force = False
 risk_score = 0
+import os
 
+if not os.path.exists(log_file_path):
+    print("=" * 50)
+    print("ERROR")
+    print("=" * 50)
+    print(f"Log file not found: {log_file_path}")
+    print("Please check the file path and try again.")
+    exit()
 with open(log_file_path, "r") as log_file:
     for line in log_file:
 
@@ -107,7 +120,6 @@ if time_based_brute_force:
     print("TIME-BASED BRUTE FORCE DETECTED")
 else:
     print("No Time-Based Brute Force Attack")
-
 print(f"INFO: {info_count}")
 print(f"WARNING: {warning_count}")
 print(f"ERROR: {error_count}")
@@ -141,8 +153,7 @@ if detected_ips:
 else:
     print("None")
     print("FAILED LOGIN COUNT:", failed_login_count)
-print("ERROR COUNT:", error_count)
-print("BRUTE FORCE:", brute_force)
+
 # Risk Score Calculation
 
 risk_score = (
@@ -180,7 +191,29 @@ if brute_force:
     print("BRUTE FORCE ATTACK DETECTED")
 else:
     print("No Brute Force Attack")
-    print()
+
+print()
+print("=" * 50)
+print("ATTACK SUMMARY")
+print("=" * 50)
+
+total_events = info_count + warning_count + error_count
+
+if risk_score >= 70:
+    threat_level = "HIGH"
+elif risk_score >= 30:
+    threat_level = "MEDIUM"
+else:
+    threat_level = "LOW"
+
+print(f"TOTAL EVENTS   : {total_events}")
+print(f"FAILED LOGINS  : {failed_login_count}")
+print(f"DETECTED USERS : {len(detected_users)}")
+print(f"DETECTED IPS   : {len(detected_ips)}")
+print(f"RISK SCORE     : {risk_score}")
+print(f"THREAT LEVEL   : {threat_level}")
+
+print()
 print("=" * 50)
 print("SAVING TXT REPORT...")
 print("=" * 50)
