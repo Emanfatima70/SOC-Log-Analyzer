@@ -113,7 +113,8 @@ python analyzer.py path/to/your/logfile.log
 ## Sample Output
 
 ![alt text](terminal-output-1.png)
-terminal-output-2.png
+
+![alt text](terminal-output-2.png)
 
 ---
 
