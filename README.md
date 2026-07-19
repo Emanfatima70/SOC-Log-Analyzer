@@ -112,7 +112,8 @@ python analyzer.py path/to/your/logfile.log
 
 ## Sample Output
 
-(Images will be added here.)
+![alt text](terminal-output-1.png)
+terminal-output-2.png
 
 ---
 
@@ -145,3 +146,9 @@ python analyzer.py path/to/your/logfile.log
 **Eman Fatima**
 
 Cybersecurity Student | SOC Analyst | Python | Networking | Detection Engineering 
+
+---
+
+## License
+
+This project is created for educational and portfolio purposes.
